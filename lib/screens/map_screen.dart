@@ -23,6 +23,8 @@ class _MapScreenState extends State<MapScreen> {
     _initializeMap();
   }
 
+  List<MapObject> mapObject = [];
+
   Future<void> _initializeMap() async {
     await _initPermission();
     await _fetchCurrentLocation();
@@ -54,6 +56,16 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Future<void> _moveToCurrentLocation(AppLatLong location) async {
+    final myLocationMarker = PlacemarkMapObject(
+        mapId: const MapObjectId('currentLocationhi'),
+        point: Point(latitude: location.lat, longitude: location.long),
+        icon: PlacemarkIcon.single(PlacemarkIconStyle(
+            image:
+                BitmapDescriptor.fromAssetImage('assets/icons/map_point.png'),
+            rotationType: RotationType.rotate)));
+
+    mapObject.add(myLocationMarker);
+
     final controller = await _mapControllerCompleter.future;
     controller.moveCamera(
       animation: const MapAnimation(
@@ -72,27 +84,6 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  List<MapObject> _getPlacemarkObjects() {
-    return [
-      PlacemarkMapObject(
-        mapId: const MapObjectId('current_location'),
-        point: Point(
-          latitude: _currentLocation.lat,
-          longitude: _currentLocation.long,
-        ),
-        opacity: 1,
-        icon: PlacemarkIcon.single(
-          PlacemarkIconStyle(
-            image: BitmapDescriptor.fromAssetImage(
-              'assets/icons/map_point.png',
-            ),
-            scale: 1,
-          ),
-        ),
-      ),
-    ];
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -102,7 +93,7 @@ class _MapScreenState extends State<MapScreen> {
             _mapControllerCompleter.complete(controller);
           }
         },
-        mapObjects: _getPlacemarkObjects(),
+        mapObjects: mapObject,
       ),
     );
   }
