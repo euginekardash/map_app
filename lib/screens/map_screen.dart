@@ -16,14 +16,13 @@ class _MapScreenState extends State<MapScreen> {
   final Completer<YandexMapController> _mapControllerCompleter = Completer();
   AppLatLong _currentLocation = const MinskLocation();
   static const AppLatLong _defaultLocation = MinskLocation();
+  List<MapObject> mapObject = [];
 
   @override
   void initState() {
     super.initState();
     _initializeMap();
   }
-
-  List<MapObject> mapObject = [];
 
   Future<void> _initializeMap() async {
     await _initPermission();
@@ -56,16 +55,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Future<void> _moveToCurrentLocation(AppLatLong location) async {
-    final myLocationMarker = PlacemarkMapObject(
-        mapId: const MapObjectId('currentLocationhi'),
-        point: Point(latitude: location.lat, longitude: location.long),
-        icon: PlacemarkIcon.single(PlacemarkIconStyle(
-            image:
-                BitmapDescriptor.fromAssetImage('assets/icons/map_point.png'),
-            rotationType: RotationType.rotate)));
-
-    mapObject.add(myLocationMarker);
-
+    addObject(location);
     final controller = await _mapControllerCompleter.future;
     controller.moveCamera(
       animation: const MapAnimation(
@@ -84,6 +74,39 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
+  void addObject(AppLatLong appLatLong) {
+    final myLocationMarker = PlacemarkMapObject(
+        mapId: const MapObjectId('currentLocation'),
+        point: Point(latitude: appLatLong.lat, longitude: appLatLong.long),
+        icon: PlacemarkIcon.single(PlacemarkIconStyle(
+            image:
+                BitmapDescriptor.fromAssetImage('assets/icons/map_point.png'),
+            rotationType: RotationType.rotate)));
+
+    final currentLocationCircle = CircleMapObject(
+        mapId: const MapObjectId('currentLocationCircle'),
+        circle: Circle(
+            center: Point(latitude: appLatLong.lat, longitude: appLatLong.long),
+            radius: 250),
+        strokeWidth: 0,
+        fillColor: Colors.blue.withOpacity(0.2),
+        );
+
+    mapObject.addAll([currentLocationCircle, myLocationMarker]);
+  }
+
+  void addMark(Point point) {
+    final marker = PlacemarkMapObject(
+        mapId: const MapObjectId('marker'),
+        point: point,
+        icon: PlacemarkIcon.single(PlacemarkIconStyle(
+            image:
+                BitmapDescriptor.fromAssetImage('assets/icons/map_point.png'),
+            rotationType: RotationType.noRotation)));
+    mapObject.add(marker);
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -93,8 +116,12 @@ class _MapScreenState extends State<MapScreen> {
             _mapControllerCompleter.complete(controller);
           }
         },
+        onMapTap: (point) {
+          //addMark(point);
+        },
         mapObjects: mapObject,
       ),
+      floatingActionButton: FloatingActionButton(onPressed: () {_fetchCurrentLocation();},child: const Icon(Icons.navigation_rounded),),
     );
   }
 }
